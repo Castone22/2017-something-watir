@@ -4,10 +4,10 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+		<title>There's Something in the WATIR</title>
 
 		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/theme/black.css">
+		<link rel="stylesheet" href="css/theme/night.css">
 
 		<!-- Theme used for syntax highlighting of code -->
 		<link rel="stylesheet" href="lib/css/zenburn.css">
@@ -24,8 +24,161 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section>
+					<h2>There's Something in the WATIR</h2>
+					<h5>
+						A brief talk on the pitfalls we find when implementing test automation, and how we solve them.
+						listed in no particular order.
+					</h5>
+				</section>
+				<section>
+					<section>
+						<h2>Not Using Continuous Integration</h2>
+					</section>
+					<section>
+						<h2>What's the point of automating if we're still running manually?</h2>
+					</section>
+				</section>
+				<section>
+					<section>
+						<img src="resources/automate-all-the-things.jpg">
+					</section>
+					<section>
+						<h4 class="soft-line">Considerations:</h4>
+						<ul>
+							<li>CI run time?</li>
+							<li>How much is too much?</li>
+							<li>Not enough?</li>
+							<li>Cost-Benefit?</li>
+							<li>Maintainability?</li>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>
+							Not unit testing our automation tests.
+						</h2>
+						<aside class="notes">
+							<ul>
+								<li>Establish Trust</li>
+								<li>Ensures that tests work</li>
+							</ul>
+						</aside>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Build on Cucumber</h2>
+					</section>
+					<section>
+						<h4 class="soft-line">Solution: Decouple</h4>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Having Page Object, but not using it.</h2>
+						<h5>Not the gem...</h5>
+					</section>
+					<section>
+						<h4 class="soft-line">Considerations</h4>
+						<ul>
+							<li>Coupling page objects to test framework</li>
+							<pre><code class="ruby" data-trim contenteditable>
+# Using page-object-gem for simplicity, but this would apply to say, geb too.
+@current_page.username_element.set @user[:username]
+@current_page.password_element.set @user[:password]
+@current_page.next_element.click
+# vs
+@current_page.fill_with @user # teach page how to get the data it needs
+@current_page.go_to_next_page
+# don't directly reference the element, instead wrap it since
+# how we hit the next page could change.
+							</code></pre>
+						</ul>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Cucumber specific pitfalls</h2>
+					</section>
+					<section>
+						<h4>Always using Cucumber</h4>
+						<h4 class="soft-line">Considerations:</h4>
+						<p>Purpose of Cucumber: Functional/Behavioral</p>
+						<h4 class="soft-line">Alternatives</h4>
+						<ul>
+							<li>Specification: RSpec/Spock/Spek/Jasmine</li>
+							<li>Unit/Integration: JUnit/RUnit/NUnit</li>
+						</ul>
+					</section>
+					<section>
+						<h4 class="soft-line">"Programmer" Gherkin</h4>
+						<p>Lets play spot the... code smells</p>
+						<pre><code class="gherkin" data-trim contenteditable>
+Scenario: story card 55351231 #what does this even mean
+  Given a "user" has been set up
+  When that user enters their "user_name" into the "user_name" field
+  Then that user enters their "password" into the "password" field
+  Then that user enters their "confirmation_password" into the "confirmation_password" field
+  Then that user clicks on the "login" button
+  Then the user sees that the "header" says "Home Page"
+  Then the user sees that the "header_image" is sourced from "http://demoqa.com/"
+  And that user clicks on the nav menu for "shopping cart"
+  And that user sees that the "results" div is empty.
+						</code></pre>
+						<h4 class="soft-line">The alternative</h4>
+						<pre><code class="gherkin" data-trim contenteditable>
+@sc_55351231
+Scenario: the shopping cart should display that it's empty when there's nothing in it
+  Given a "user" has navigated to the shopping cart before adding anything
+  # Could actually check the header and such in here...
+  # More on that later.
+  Then they should see that there is nothing in their shopping cart
+  # Note lack of When since no action is actually taken.
+						</code></pre>
+					</section>
+					<section>
+						<h4 class="soft-line">Forcing step definitions to be reusable</h4>
+						<pre><code class="ruby" data-trim contenteditable>
+When(/^that user enters their "([^"]*)" into the "([^"]*)" field$/) do |content, field_name|
+  @browser.text_field(id: field_name).set content
+end
+						</code></pre>
+						<h4 class="soft-line">Over making code reusable</h4>
+						<pre><code class="ruby" data-trim contenteditable>
+Given(/^a "([^"]*)" has navigated to the shopping cart before adding anything$/) do |user_key|
+  build_user user_key
+  navigate_to :shopping_cart, :empty
+end
+
+module HelperClass
+  def build_user(data_key)
+    @user = DataManager.yaml_load data_key
+  end
+  def navigate_to(*args)
+    Routes.browse @browser, args
+  end
+end
+World HelperClass
+						</code></pre>
+					</section>
+					<section class="fragmented">
+						<h4 class="soft-line">Non Functional/Behavioral Cucumber</h4>
+						<p>Like... static content on a page...</p>
+						<pre><code class="ruby" data-trim contenteditable>
+Then(/^The shopping cart page should display the correct content$/) do
+  expect(@current_page.header).to eql @current_page.expected :header
+  expect(@current_page.clear_element.text).to eql @current_page.expected :clear_button_text
+  expect(@current_page.basket_header).to eql @current_page.expected :basket_header
+  expect(@current_page.total_label).to eql @current_page.expected :total_label
+  # You get the idea...
+end
+						</code></pre>
+						<p>What happens when one fails?</p>
+						<p class="fragment">Even if they're in different steps.</p>
+					</section>
+				</section>
 			</div>
 		</div>
 
