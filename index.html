@@ -32,11 +32,15 @@
 					</h5>
 				</section>
 				<section>
+					<section class = "fragmented">
+						<h2>Not Testing</h2>
+						<h5 class = "fragment">It's never too late to start.</h5>
+					</section>
+				</section>
+				<section>
 					<section>
 						<h2>Not Using Continuous Integration</h2>
-					</section>
-					<section>
-						<h2>What's the point of automating if we're still running manually?</h2>
+						<h5 class = "fragment">What's the point of automating if we're still running manually?</h5>
 					</section>
 				</section>
 				<section>
@@ -57,19 +61,24 @@
 				<section>
 					<section>
 						<h2>
-							Not unit testing our automation tests.
+							Treating Test Automation code as anything other than an Application
 						</h2>
-						<aside class="notes">
-							<ul>
-								<li>Establish Trust</li>
-								<li>Ensures that tests work</li>
-							</ul>
-						</aside>
+					</section>
+					<section>
+						<h4 class="soft-line">Considerations:</h4>
+						<ul>
+							<li>Unit Testing?</li>
+							<li>Code Review?</li>
+							<li>Pair Programming?</li>
+							<li>Keeping libraries up to date?</li>
+							<li>Managing Secrets?</li>
+						</ul>
 					</section>
 				</section>
 				<section>
 					<section>
-						<h2>Build on Cucumber</h2>
+						<h2>Building on your Libraries</h2>
+						<h5 class = "fragment">and not around them</h5>
 					</section>
 					<section>
 						<h4 class="soft-line">Solution: Decouple</h4>
@@ -81,10 +90,8 @@
 						<h5>Not the gem...</h5>
 					</section>
 					<section>
-						<h4 class="soft-line">Considerations</h4>
-						<ul>
-							<li>Coupling page objects to test framework</li>
-							<pre><code class="ruby" data-trim contenteditable>
+						<h4 class="soft-line">Coupling page objects to test framework</h4>
+						<pre><code class="ruby" data-trim contenteditable>
 # Using page-object-gem for simplicity, but this would apply to say, geb too.
 @current_page.username_element.set @user[:username]
 @current_page.password_element.set @user[:password]
@@ -94,8 +101,7 @@
 @current_page.go_to_next_page
 # don't directly reference the element, instead wrap it since
 # how we hit the next page could change.
-							</code></pre>
-						</ul>
+						</code></pre>
 					</section>
 					<section>
 						<h4 class="soft-line">Not Implementing a Base Page</h4>
@@ -185,6 +191,9 @@ end
 						<p>What happens when one fails?</p>
 						<p class="fragment">Even if they're in different steps.</p>
 					</section>
+				</section>
+				<section>
+					<h2>Thoughts?  Concerns?  Questions?</h2>
 				</section>
 			</div>
 		</div>
